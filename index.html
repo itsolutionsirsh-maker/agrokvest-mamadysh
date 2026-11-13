@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>АгроКвест Мамадыш | Агроматематика + ИИ</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial, sans-serif; background: #e8f5e9; margin: 0; padding: 20px; }
+.header { background: #2e7d32; color: white; padding: 20px; text-align: center; border-radius: 10px; }
+.mission { background: white; margin: 20px 0; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+button { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+input { padding: 8px; margin: 5px; }
+.explain { background: #f1f8e9; padding: 10px; border-radius: 5px; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🌾 АгроКвест Мамадышского района</h1>
+<p>Нажми кнопку ниже, чтобы начать (анимация приближения к Мамадышу)</p>
+<button onclick="start()">Приступить</button>
+</div>
+<div id="content" style="display:none;">
+<div class="mission">
+<h2>Миссия 1: Оптимизация удобрений</h2>
+<div class="explain"><strong>Что:</strong> Находим оптимальную дозу азота по модели Y = 15 + 0.8*N - 0.005*N².<br><strong>Зачем:</strong> ИИ мгновенно находит максимум урожая, экономит время и убирает ошибки человека.</div>
+<input type="number" id="n" value="70">
+<button onclick="calc()">Рассчитать с ИИ</button>
+<p id="res"></p>
+<canvas id="chart" width="400" height="200"></canvas>
+</div>
+</div>
+<script>
+function start() {
+  document.getElementById('content').style.display = 'block';
+  document.querySelector('.header button').style.display = 'none';
+  document.querySelector('.header p').textContent = 'Приблизились к Мамадышскому району. Решай миссии!';
+}
+function calc() {
+  const N = +document.getElementById('n').value;
+  const Y = 15 + 0.8*N - 0.005*N*N;
+  const opt = 80;
+  document.getElementById('res').innerHTML = '<strong>Твой урожай: ' + Y.toFixed(1) + ' ц/га</strong><br>Оптимум ИИ: ' + opt + ' кг/га (макс ~47 ц/га)';
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (window.ch) window.ch.destroy();
+  window.ch = new Chart(ctx, {type:'line', data:{labels:['40','60','80','100','120'], datasets:[{label:'Урожай ц/га', data:[39,43,47,45,39], borderColor:'#2e7d32', tension:0.3}]}});
+}
+</script>
+</body>
+</html>
