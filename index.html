@@ -11,9 +11,12 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: #e8f5e9; margin: 
 #map-img { width: 85%; max-width: 800px; height: auto; transition: transform 5s ease-in-out; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
 button { background: #ffb300; color: #333; border: none; padding: 15px 30px; border-radius: 10px; font-size: 1.2em; cursor: pointer; margin-top: 20px; font-weight: bold; }
 #main { display: none; padding: 20px; max-width: 900px; margin: auto; }
-.farm-visual { text-align: center; font-size: 4em; margin: 20px 0; }
-.mission { background: white; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.header { background: #2e7d32; color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+.farm-visual { text-align: center; font-size: 3.5em; margin: 15px 0; }
+.mission { background: white; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: none; }
+.mission.active { display: block; border: 3px solid #ffb300; }
 .explain { background: #f1f8e9; padding: 12px; border-radius: 8px; margin: 10px 0; }
+.score { font-size: 1.3em; font-weight: bold; color: #2e7d32; }
 #map-text { margin-top: 15px; font-weight: bold; color: #1b5e20; font-size: 1.1em; text-align: center; }
 </style>
 </head>
@@ -26,22 +29,52 @@ button { background: #ffb300; color: #333; border: none; padding: 15px 30px; bor
 </div>
 
 <div id="main">
+  <div class="header">
+    <h2>🌾 АгроКвест Мамадыш</h2>
+    <div class="score">Очки: <span id="score">0</span> | Миссия <span id="missionNum">1</span>/3</div>
+  </div>
   <div class="farm-visual">🌾 🐄 🐄 🌾 🚜</div>
-  <div class="mission">
-    <h2>Миссия 1: Оптимизация удобрений на ферме</h2>
+
+  <div class="mission active" id="m1">
+    <h2>Миссия 1: Оптимизация удобрений</h2>
     <div class="explain">
-      <strong>Что:</strong> Находим оптимальную дозу азота для пшеницы по модели Y = 15 + 0.8·N − 0.005·N².<br>
+      <strong>Что делаем:</strong> Находим оптимальную дозу азота для пшеницы.<br>
       <strong>Зачем:</strong> ИИ мгновенно находит максимум урожая (оптимум ~80 кг/га), экономит время и убирает человеческий фактор.
     </div>
     <input type="number" id="nDose" value="70" placeholder="Доза N кг/га">
     <button onclick="calcYield()">Рассчитать с ИИ</button>
-    <p id="result"></p>
+    <p id="result1"></p>
     <canvas id="yieldChart"></canvas>
   </div>
+
+  <div class="mission" id="m2">
+    <h2>Миссия 2: Прогноз надоя</h2>
+    <div class="explain">
+      <strong>Что делаем:</strong> Прогнозируем суточный надой молока по корму.<br>
+      <strong>Зачем:</strong> ИИ анализирует данные и помогает планировать производство на мини-ферме.
+    </div>
+    <input type="number" id="feed" value="16.5" step="0.1" placeholder="Корма ц к.ед./голову">
+    <button onclick="calcMilk()">Анализ ИИ</button>
+    <p id="result2"></p>
+  </div>
+
+  <div class="mission" id="m3">
+    <h2>Миссия 3: Норма высева</h2>
+    <div class="explain">
+      <strong>Что делаем:</strong> Рассчитываем точную норму высева пшеницы.<br>
+      <strong>Зачем:</strong> ИИ исключает ошибки в расчётах и экономит семена.
+    </div>
+    <button onclick="calcSeed()">Рассчитать норму</button>
+    <p id="result3"></p>
+  </div>
+
   <div class="farm-visual">🐄 🐄 🥛 🐄 🌾</div>
 </div>
 
 <script>
+let score = 0;
+let currentMission = 1;
+
 function startAnim() {
   document.getElementById('map-text').textContent = 'Мамадышский район выделен по границам';
   setTimeout(() => {
@@ -61,22 +94,40 @@ function startAnim() {
   }, 5500);
 }
 
+function updateScore(points) {
+  score += points;
+  document.getElementById('score').textContent = score;
+  if (currentMission < 3) {
+    document.getElementById('m' + currentMission).classList.remove('active');
+    currentMission++;
+    document.getElementById('m' + currentMission).classList.add('active');
+    document.getElementById('missionNum').textContent = currentMission;
+    alert('Миссия пройдена! +очки. Открыта следующая.');
+  } else {
+    alert('🎉 Все миссии пройдены! Очки: ' + score);
+  }
+}
+
 function calcYield() {
   const N = parseFloat(document.getElementById('nDose').value) || 0;
   const Y = 15 + 0.8 * N - 0.005 * N * N;
   const optN = 80;
   const maxY = 15 + 0.8 * optN - 0.005 * optN * optN;
-  document.getElementById('result').innerHTML = `Твой урожай: <b>${Y.toFixed(1)} ц/га</b><br>Оптимум ИИ: <b>${optN} кг/га</b> → ~${maxY.toFixed(1)} ц/га`;
-  
-  const ctx = document.getElementById('yieldChart').getContext('2d');
-  const labels = [40,60,80,100,120,140];
-  const data = labels.map(n => 15 + 0.8*n - 0.005*n*n);
-  if (window.ch) window.ch.destroy();
-  window.ch = new Chart(ctx, {
-    type: 'line',
-    data: { labels: labels.map(l => l+' кг'), datasets: [{ label: 'Урожайность ц/га', data, borderColor: '#2e7d32', tension: 0.3 }] },
-    options: { responsive: true }
-  });
+  document.getElementById('result1').innerHTML = `Твой урожай: <b>${Y.toFixed(1)} ц/га</b><br>Оптимум ИИ: <b>${optN} кг/га</b> → ~${maxY.toFixed(1)} ц/га`;
+  updateScore(50);
+}
+
+function calcMilk() {
+  const feed = parseFloat(document.getElementById('feed').value) || 16;
+  const milk = Math.max(20, Math.min(35, 5 + 1.5 * feed));
+  document.getElementById('result2').innerHTML = `Прогноз ИИ: <b>${milk.toFixed(1)} кг/корову/сутки</b><br>Среднее по району ~31.6 кг`;
+  updateScore(40);
+}
+
+function calcSeed() {
+  const rate = 193;
+  document.getElementById('result3').innerHTML = `Норма высева: <b>${rate} кг/га</b><br>Для 50 га нужно ≈ ${(rate*50/1000).toFixed(1)} т семян`;
+  updateScore(40);
 }
 </script>
 </body>
